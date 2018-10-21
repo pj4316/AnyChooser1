@@ -2,9 +2,7 @@ package com.pickme.anychooser;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.PointF;
 import android.os.CountDownTimer;
-import android.util.Log;
 import android.widget.LinearLayout;
 
 public class Finger extends android.support.v7.widget.AppCompatImageView {
@@ -14,13 +12,20 @@ public class Finger extends android.support.v7.widget.AppCompatImageView {
             Color.BLACK, Color.CYAN, Color.GRAY, Color.RED, Color.DKGRAY,
             Color.LTGRAY, Color.YELLOW };
 
-    public int pointId;
+    //
+    int pointerId;
 
+    // 원 크기 스케일
     float scale = 0.0f;
+
+    // 크기 동적변경 타이머
     CountDownTimer timer = null;
+
+    // 고유 색깔
     int color;
 
     int width, height;
+
 
     public Finger(Context context) {
         super(context);
@@ -28,7 +33,7 @@ public class Finger extends android.support.v7.widget.AppCompatImageView {
         height = 300;
 
         //뷰 객체가 표시될 레이아웃 설정
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(width,height);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(width, height);
 
         this.setLayoutParams(params);
 
@@ -36,6 +41,9 @@ public class Finger extends android.support.v7.widget.AppCompatImageView {
         this.setImageResource(R.drawable.circle);
 
         scale = 0.0f;
+        this.setScaleX(scale);
+        this.setScaleY(scale);
+
 
         // Scale이 변동되는 타이머
         // 뷰 객체 생성후 2초동안 동작하는 타이머, 30ms마다 Scale이 커짐
@@ -74,9 +82,11 @@ public class Finger extends android.support.v7.widget.AppCompatImageView {
         color = index%colors.length;
     }
 
-    public void setPointId(int id){
-        pointId = id;
+    public void setPointerId(int id)
+    {
+        pointerId = id;
     }
+
     public void setLoc(float x, float y)
     {
         //이미지를 포인터 중앙에 위치하도록 width/2, height/2를 빼줌
