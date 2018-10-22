@@ -5,9 +5,10 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-        <com.pickme.anychooser.MyLinearLayout
+        <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    />
+                    android:id="@+id/myLinearLayout"
+            android:orientation="horizontal" />
 
 </android.support.constraint.ConstraintLayout>
