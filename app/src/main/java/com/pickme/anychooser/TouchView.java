@@ -1,7 +1,5 @@
 package com.pickme.anychooser;
 
-import android.animation.ValueAnimator;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -10,10 +8,10 @@ import android.graphics.Path;
 import android.graphics.Region;
 import android.os.CountDownTimer;
 import android.os.Vibrator;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.animation.LinearInterpolator;
 import android.widget.Toast;
 
 import java.util.Random;
@@ -21,53 +19,11 @@ import java.util.concurrent.TimeUnit;
 
 public class TouchView extends View {
 
-    // 포인터의 위치 및 개별 Radius, 색깔을 저장
-    // Radius를 점진적으로 키우기 위한 Timer
-    class Pointer{
-        float cX;
-        float cY;
-        float radius;
-        int color;
-        CountDownTimer cdt;
-
-        public Pointer(){
-            radius = 10;
-            cdt = new CountDownTimer(1200,30) {
-                @Override
-                public void onTick(long millisUntilFinished) {
-
-                    if(radius < 150) radius+=20;
-                }
-
-                @Override
-                public void onFinish() {
-
-                }
-            };
-
-            cdt.start();
-        }
-
-
-        public void setColor(int color) {
-            this.color = color;
-        }
-
-        public void setcX(float cX) {
-            this.cX = cX;
-        }
-
-        public void setcY(float cY) {
-            this.cY = cY;
-        }
-
-    }
-
     // 진동을 위한 객체
     Vibrator vibrator = null;
 
     // Pointer를 PointerId별로 저장하는 배열
-    SparseArray<Pointer> pointers = null;
+    SparseArray<TouchPointer> pointers = null;
 
     // 색변경을 위한 인덱스
     int color_i = 0;
@@ -84,6 +40,8 @@ public class TouchView extends View {
 
     // 추첨 결과여부를 위한 Flag
     boolean finished = false;
+    VariableData resultView = null;
+    int resultIndex = -1;
 
     public TouchView(Context context) {
         super(context);
@@ -99,9 +57,11 @@ public class TouchView extends View {
         pointers = new SparseArray<>();
         canvas = new Canvas();
 
+        resultView = new VariableData(1000,50);
+
         // 아무런 포인터 추가 제거가 없는 상태에서, 3초간 동작하며
         // 이후에 결과를 표시
-        timer = new CountDownTimer(3000, 50) {
+        timer = new CountDownTimer(3000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
 
@@ -116,29 +76,33 @@ public class TouchView extends View {
 
                 // 랜덤 숫자를 하나 얻어서 포인터 인덱스를 고른다
                 Random random = new Random();
-                int index = Math.abs(random.nextInt()) % pointers.size();
-
-                // 추첨이 완료 되었기 때문에 진동으로 사용자에게 결과를 알린다
-                vibrator.vibrate(1000);
+                resultIndex = Math.abs(random.nextInt()) % pointers.size();
 
                 // Index를 통해 Pointer를 얻는다
-                Pointer p = pointers.get(pointers.indexOfKey(index));
+                TouchPointer p = pointers.get(pointers.indexOfKey(resultIndex));
 
                 if(p != null){
-                    //pointers.clear();
-
-
-                    //추첨된 Pointer를 제외한 나머지의 객체의 색깔을 검정으로 변경
-                    for(int i=0;i<pointers.size();i++)
-                    {
-                        if(i != index) pointers.get(pointers.indexOfKey(i)).color = COLOR.length-1;
-                    }
 
                     // 추첨결과를 True로 표시
                     finished = true;
 
+                    for(int i=0;i<pointers.size();i++){
+                        if(i!=resultIndex){
+                            pointers.get(pointers.indexOfKey(i)).color = COLOR.length-1;
+                        }
+                    }
+
+                    resultView.cancel();
+                    resultView.setIncre(-100);
+                    resultView.setData(850);
+                    resultView.start();
+
                     // 당첨된 결과를 화면에 글씨로 출력해준다
-                    Toast.makeText(getContext(), COLORS[pointers.get(index).color]+" 당첨!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), COLORS[pointers.get(pointers.indexOfKey(resultIndex)).color]+" 당첨!", Toast.LENGTH_SHORT).show();
+                    // 추첨이 완료 되었기 때문에 진동으로 사용자에게 결과를 알린다
+                    vibrator.vibrate(500);
+
+                    //pointers.clear();
                 }
 
 
@@ -159,7 +123,7 @@ public class TouchView extends View {
                 float y = event.getY(pointIndex);
                 int color = color_i++%(COLOR.length-1);
 
-                Pointer pointer = new Pointer();
+                TouchPointer pointer = new TouchPointer();
                 pointer.setcX(event.getX(pointIndex));
                 pointer.setcY(event.getY(pointIndex));
                 pointer.setColor(color);
@@ -171,6 +135,7 @@ public class TouchView extends View {
                 finished = false;
                 break;
             case MotionEvent.ACTION_MOVE:
+                if(pointers.size() == 0) break;
 
                 for(int i=0;i<event.getPointerCount();i++) {
                     int pId = event.getPointerId(i);
@@ -216,19 +181,21 @@ public class TouchView extends View {
         paintPath.setStyle(Paint.Style.FILL);
 
         for(int i=0;i<pointers.size();i++) {
-            Pointer p = pointers.get(pointers.keyAt(i));
+            TouchPointer p = pointers.get(pointers.keyAt(i));
             paintCircle.setColor(COLOR[p.color]);
 
-            canvas.drawCircle(p.cX,p.cY,p.radius,paintCircle);
+            canvas.drawCircle(p.cX,p.cY,p.radiusData.data, paintCircle);
 
-            if(COLOR[p.color] != Color.BLACK) path.addCircle(p.cX,p.cY,p.radius+50, Path.Direction.CW);
-            else path.reset();
-
-            if(finished){
+            if(finished && i==resultIndex)
+            {
+                path.addCircle(p.cX,p.cY,p.radiusData.data + resultView.data, Path.Direction.CW);
                 canvas.clipPath(path, Region.Op.DIFFERENCE);
                 canvas.drawColor(COLOR[p.color]);
-                //finished=false;
             }
+
+            //else path.reset();
+
+
        }
 
         invalidate();
