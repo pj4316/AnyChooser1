@@ -8,5 +8,7 @@ AnyChooser 프로그램은 한명만 당첨되는 제비뽑기를 하는 기능�
 기술 :
  - Multi Touch 이벤트 구현
  - CountDownTimer를 통한 추첨 기능
+ - Loading Activity 추가 (로딩화면)
+ - Toolbar/help 기능 추가
  
  
