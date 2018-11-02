@@ -1,7 +1,9 @@
 <resources>
-    <string name="app_name">충충이의 제비뽑기</string>
+    <string name="app_name">It is you</string>
     <string name="to">to</string>
     <string name="subject">subject</string>
     <string name="message">message</string>
     <string name="send">send</string>
+    <string name="developer">Designed by MaxLee</string>
+    <string name="question">help</string>
 </resources>

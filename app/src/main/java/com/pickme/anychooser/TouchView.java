@@ -1,21 +1,23 @@
 package com.pickme.anychooser;
 
+import android.app.ActionBar;
+import android.app.Activity;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Region;
 import android.os.CountDownTimer;
+import android.os.Handler;
 import android.os.Vibrator;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Toast;
 
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 public class TouchView extends View {
 
@@ -30,7 +32,6 @@ public class TouchView extends View {
 
     // 색깔 테이블 및 한글표시
     int[] COLOR = {Color.WHITE, Color.RED, Color.CYAN, Color.BLUE, Color.YELLOW, Color.GREEN, Color.GRAY, Color.DKGRAY, Color.MAGENTA, Color.TRANSPARENT};
-    String[] COLORS = {"흰색", "빨강색", "하늘색", "파랑색", "노랑색", "초록색", "회색", "진한 회색", "자주색", "검정색"};
 
     // 추첨을 위한 Timer
     CountDownTimer timer = null;
@@ -43,8 +44,12 @@ public class TouchView extends View {
     VariableData resultView = null;
     int resultIndex = -1;
 
-    public TouchView(Context context) {
+    android.support.v7.app.ActionBar actionBar;
+    Handler actionbarHandler;
+
+    public TouchView(Context context,android.support.v7.app.ActionBar _actionBar ) {
         super(context);
+        actionBar = _actionBar;
 
         init();
     }
@@ -58,6 +63,8 @@ public class TouchView extends View {
         canvas = new Canvas();
 
         resultView = new VariableData(1000,50);
+
+        actionbarHandler = new Handler();
 
         // 아무런 포인터 추가 제거가 없는 상태에서, 3초간 동작하며
         // 이후에 결과를 표시
@@ -98,7 +105,8 @@ public class TouchView extends View {
                     resultView.start();
 
                     // 당첨된 결과를 화면에 글씨로 출력해준다
-                    Toast.makeText(getContext(), COLORS[pointers.get(pointers.indexOfKey(resultIndex)).color]+" 당첨!", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getContext(), COLORS[pointers.get(pointers.indexOfKey(resultIndex)).color]+" 당첨!", Toast.LENGTH_SHORT).show();
+
                     // 추첨이 완료 되었기 때문에 진동으로 사용자에게 결과를 알린다
                     vibrator.vibrate(500);
 
@@ -121,11 +129,28 @@ public class TouchView extends View {
                 timer.cancel();
                 float x = event.getX(pointIndex);
                 float y = event.getY(pointIndex);
+
+                try {
+                    if (y <= 80) {
+                        if(!actionBar.isShowing()) actionBar.show();
+                        actionbarHandler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                actionBar.hide();
+                            }
+                        },2000);
+                        break;
+                    }
+                }catch (Exception e){
+                    Log.d("EXCEPTION", e.toString());
+
+                }
+
                 int color = color_i++%(COLOR.length-1);
 
                 TouchPointer pointer = new TouchPointer();
-                pointer.setcX(event.getX(pointIndex));
-                pointer.setcY(event.getY(pointIndex));
+                pointer.setcX(x);
+                pointer.setcY(y);
                 pointer.setColor(color);
 
                 pointers.put(pointerId, pointer);
@@ -139,9 +164,11 @@ public class TouchView extends View {
 
                 for(int i=0;i<event.getPointerCount();i++) {
                     int pId = event.getPointerId(i);
+                    TouchPointer p = pointers.get(pId);
+                    if(p==null) continue;
 
-                    pointers.get(pId).setcX(event.getX(i));
-                    pointers.get(pId).setcY(event.getY(i));
+                    p.setcX(event.getX(i));
+                    p.setcY(event.getY(i));
                 }
 
                 draw(canvas);
@@ -204,4 +231,5 @@ public class TouchView extends View {
     public void setVibrator(Vibrator v){
         vibrator = v;
     }
+
 }

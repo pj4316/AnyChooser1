@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:gravity="center_vertical"
+    android:background="@color/colorPrimaryDark"
+    android:layout_width="match_parent"
+    android:layout_height="50dp">
+
+    <ImageButton
+        android:id="@+id/btnHistory"
+        android:layout_alignParentLeft="true"
+        android:background="@drawable/appmain"
+        android:layout_width="50dp"
+        android:layout_height="50dp" />
+
+    <ImageButton
+        android:id="@+id/questionmark"
+        android:layout_alignParentRight="true"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/questionmark"/>
+</RelativeLayout>
