@@ -8,41 +8,19 @@ import android.graphics.PointF;
 import android.os.Bundle;
 import android.app.Activity;
 import android.os.CountDownTimer;
-import android.os.Handler;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.Toast;
-
 import java.util.Random;
+
 
 public class MainActivity extends Activity{
 
-    //timer test start
-    //link : https://developer.android.com/reference/android/os/CountDownTimer
-    /*
-    public long nSeconds = 5;//java.lang.NullPointerException: Attempt to invoke virtual method 'android.content.Context android.content.Context.getApplicationContext()' on a null object reference
-    public Toast toastSecondsText = Toast.makeText(getApplicationContext(), "This message will disappear in " + nSeconds + " second", Toast.LENGTH_SHORT);
-    public Toast toastEndText = Toast.makeText(getApplicationContext(), "End!!", Toast.LENGTH_SHORT);
 
-    public CountDownTimer timer =  new CountDownTimer(5000, 1000) {
-
-        public void onTick(long millisUntilFinished) {
-            nSeconds = millisUntilFinished / 1000;
-            toastSecondsText = Toast.makeText(getApplicationContext(), "This message will disappear in " + nSeconds + " second", Toast.LENGTH_SHORT);
-            //mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
-        }
-
-        public void onFinish() {
-            toastSecondsText.cancel();;
-            toastEndText.show();
-            // mTextField.setText("done!");
-        }
-    }.start();
-    */
-    //timer test end
+    int fingerNum = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,9 +36,27 @@ public class MainActivity extends Activity{
 
         private final SurfaceHolder surfaceHolder;
         private final Paint[] paint = new Paint[10];//private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        //link : https://developer.android.com/reference/android/os/CountDownTimer
+        public long nSeconds = 2;//java.lang.NullPointerException: Attempt to invoke virtual method 'android.content.Context android.content.Context.getApplicationContext()' on a null object reference
+        public Toast toastSecondsText = Toast.makeText(getApplicationContext(), "This message will disappear in " + nSeconds + " second", Toast.LENGTH_SHORT);
+        public Toast toastEndText = Toast.makeText(getApplicationContext(), "End!!", Toast.LENGTH_SHORT);
 
-        //timer..
+        public CountDownTimer timer =  new CountDownTimer(3000, 1000) {
 
+            public void onTick(long millisUntilFinished) {
+                nSeconds = millisUntilFinished / 1000;
+                toastSecondsText = Toast.makeText(getApplicationContext(), "This message will disappear in " + nSeconds + " second", Toast.LENGTH_SHORT);
+                toastSecondsText.show();
+            }
+
+            public void onFinish() {
+                toastSecondsText.cancel();
+                Random randFinger = new Random();
+                fingerNum = randFinger.nextInt(fingerNum);
+                toastEndText = Toast.makeText(getApplicationContext(), fingerNum + " choosed!! End!!", Toast.LENGTH_SHORT);
+                toastEndText.show();
+            }
+        };
 
         public FingersView(Context context) {
             super(context);
@@ -78,13 +74,18 @@ public class MainActivity extends Activity{
             switch (action){
 
                 case MotionEvent.ACTION_DOWN:
+                    timer.start();
                 case MotionEvent.ACTION_POINTER_DOWN: {
+
                     PointF f = new PointF();
                     f.x = event.getX(pointerIndex);
                     f.y = event.getY(pointerIndex);
                     nActiveFingers.put(pointerId, f);
                     Random rand;
                     int colorsIndex;
+
+                    fingerNum = event.getPointerCount();
+
                     for (int size = event.getPointerCount(), i = 0; i < size; i++) {
                         PointF point = nActiveFingers.get(event.getPointerId(i));
                         if (point != null) {
@@ -95,9 +96,7 @@ public class MainActivity extends Activity{
                             colorsIndex = rand.nextInt(10);
                             colorIndexArray[i] = colorsIndex;
                             if(1 < i && i == size-1) colorIndexArray[i] = -1;
-                            //Log.d("colorIndex", "colorsIndex = " + colorsIndex);
-                            //for(int j = 0 ; j < event.getPointerCount() ; j++)
-                            //    Log.d( "colorIndexArray", "colorIndexArray[ " + i + " ] : " + colorIndexArray[j]);
+
                             if(i == size-1){
                                 //TODO : avoid same color finger
                                 paint[i] = new Paint();
@@ -111,13 +110,6 @@ public class MainActivity extends Activity{
                 }
 
                 case MotionEvent.ACTION_MOVE: {
-                    /*
-                    final int tempCount = event.getPointerCount();
-                    Log.d("tempCount", "tempCount : " + tempCount);
-                    int rnd = new Random().nextInt(tempCount);
-                    timer.start();
-                    */
-
                     canvas.drawColor(Color.BLACK);
                     for (int size = event.getPointerCount(), i = 0; i < size; i++) {
                         PointF point = nActiveFingers.get(event.getPointerId(i));
@@ -134,6 +126,8 @@ public class MainActivity extends Activity{
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_POINTER_UP:
                 case MotionEvent.ACTION_CANCEL: {
+                    fingerNum = -1;
+                    timer.cancel();
                     canvas.drawColor(Color.BLACK);
                     nActiveFingers.remove(pointerId);
                     break;
@@ -142,8 +136,6 @@ public class MainActivity extends Activity{
                     break;
             }
             surfaceHolder.unlockCanvasAndPost(canvas);
-
-
             return true;
         }
     }
